@@ -13,6 +13,7 @@ class AnalizadorLexico:
     self.buffer = ""
     self.estado = 0 # Estado Inicial 
     self.i = 0 #Contador para recorrer la cadena
+    self.contadorFecha = 0
 
   def agregarToken(self,lexema,linea,columna,token):
       self.listaTokens.append(Token(lexema,linea,columna,token))  
@@ -28,6 +29,10 @@ class AnalizadorLexico:
         self.estado = 1
         self.buffer += caracter
         self.columna += 1
+    elif caracter == "<":
+        self.estado = 3
+        self.buffer += caracter 
+        self.columna += 1 
     elif caracter in ["\t"," "]: #Espacios en blanco y tabulaciones
         self.columna += 1
     elif caracter == '$':
@@ -36,6 +41,7 @@ class AnalizadorLexico:
       self.estado = 99
       self.buffer += caracter 
       self.columna += 1
+      
       #self.agregarError(caracter,self.linea,self.columna)
       #self.columna += 1
       #self.estado = 0
@@ -65,24 +71,31 @@ class AnalizadorLexico:
       self.estado = 12
       self.buffer += caracter
       self.columna += 1
-    else:
-      if self.buffer in self.PalabrasReservadas:
+    elif self.buffer in self.PalabrasReservadas:
          self.agregarToken(self.buffer,self.linea,self.columna,"palabra reservada {}".format(self.buffer))
          self.estado = 0
          self.i -= 1
-      elif self.buffer in self.condiciones:
+    elif self.buffer in self.condiciones: 
          self.agregarToken(self.buffer,self.linea,self.columna,"condicion {}".format(self.buffer))
          self.estado = 0
          self.i -= 1
-      elif self.buffer.isalpha():
-         self.agregarToken(self.buffer,self.linea,self.columna,"nombre archivo")
-         self.estado = 0
-         self.i -= 1    
+    else:
+      if caracter == " " or caracter == "$":
+         if self.buffer.isalpha():
+         #self.estado = 12
+         #self.buffer += caracter
+         #self.columna += 1   
+          self.agregarToken(self.buffer,self.linea,self.columna,"identificador")
+          self.estado = 0
+          self.i -= 1    
       else:
-        self.agregarError(self.buffer,self.linea,self.columna)
-        self.columna += 1
-        self.estado = 0 
-        self.i -= 1    
+         self.estado = 99
+         self.buffer += caracter 
+         self.columna += 1  
+        #self.agregarError(self.buffer,self.linea,self.columna)
+        #self.columna += 1
+        #self.estado = 0 
+        #self.i -= 1    
         
   def s12(self,caracter:str):
         '''Estado S12'''  
@@ -99,15 +112,86 @@ class AnalizadorLexico:
             self.buffer += caracter
             self.columna += 1   
         elif caracter == " " or caracter == "$":
-            self.agregarToken(self.buffer,self.linea,self.columna,"nombre archivo")
+            self.agregarToken(self.buffer,self.linea,self.columna,"identificador")
             self.estado = 0
             self.i -= 1 
         else:
-            self.buffer += caracter
-            self.agregarError(self.buffer,self.linea,self.columna)
+            self.estado = 99
+            self.buffer += caracter 
             self.columna += 1
-            self.estado = 0
-            self.i -= 1 
+            #self.buffer += caracter
+            #self.agregarError(self.buffer,self.linea,self.columna)
+            #self.columna += 1
+            #self.estado = 0
+            #self.i -= 1 
+            
+  def s3(self,caracter):
+      if caracter.isdigit() and self.contadorFecha <= 4:
+          self.estado = 3
+          self.buffer += caracter
+          self.columna += 1  
+          self.contadorFecha += 1
+          #print(f"1Agrego un numero {caracter}")   
+      else:
+          if self.contadorFecha == 4:
+            #print(f"1Llegué a 4 dígitos ahora me paso a 31 {caracter}")
+            self.estado = 31
+            #self.buffer += caracter
+            self.columna += 1  
+            self.contadorFecha = 0
+            self.i -=1
+          else:
+            self.estado = 99
+            self.buffer += caracter 
+            self.columna += 1    
+              
+  def s31(self,caracter):
+      #print(f"llegue a 31 {caracter}")
+      if caracter == "-":
+         self.estado = 32
+         self.buffer += caracter 
+         self.columna += 1
+         #print(f"Ahora me paso a 32 {caracter}")
+      else:
+          self.estado = 99
+          self.buffer += caracter 
+          self.columna += 1      
+               
+  def s32(self,caracter):
+    #print(f"Llegué a 32 {caracter}")
+    if caracter.isdigit() and self.contadorFecha <= 4:
+        self.estado = 32
+        self.buffer += caracter
+        self.columna += 1  
+        self.contadorFecha += 1
+    else:
+      if self.contadorFecha == 4:
+            #print(f"1Llegué a 4 dígitos ahora me paso a 33 {caracter}")
+            self.estado = 33
+            #self.buffer += caracter
+            self.columna += 1  
+            self.contadorFecha = 0
+            self.i -=1
+      else:
+            self.estado = 99
+            self.buffer += caracter 
+            self.columna += 1    
+  
+  def s33(self,caracter):
+      #print(f"Llegué a 33 {caracter}")  
+      if caracter == ">":
+         self.estado = 33
+         self.buffer += caracter
+         self.columna += 1   
+      elif caracter == " " or caracter == "$":
+          self.agregarToken(self.buffer,self.linea,self.columna,"intervalo fecha")
+          self.estado = 0
+          self.i -= 1 
+      else:
+          self.estado = 99
+          self.buffer += caracter 
+          self.columna += 1  
+      
 
   def analizar(self,cadena):
     cadena += '$'
@@ -121,7 +205,15 @@ class AnalizadorLexico:
         elif self.estado == 1:
             self.s1(cadena[self.i])
         elif self.estado == 12:
-            self.s12(cadena[self.i])   
+            self.s12(cadena[self.i]) 
+        elif self.estado == 3:
+            self.s3(cadena[self.i])
+        elif self.estado == 31:
+            self.s31(cadena[self.i])  
+        elif self.estado == 32:
+            self.s32(cadena[self.i])
+        elif self.estado == 33:
+            self.s33(cadena[self.i])
         elif self.estado == 99:
             self.E(cadena[self.i])          
         self.i += 1
