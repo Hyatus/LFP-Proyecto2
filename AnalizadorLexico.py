@@ -14,6 +14,7 @@ class AnalizadorLexico:
     self.estado = 0 # Estado Inicial 
     self.i = 0 #Contador para recorrer la cadena
     self.contadorFecha = 0
+    self.contadorNumero = 0
 
   def agregarToken(self,lexema,linea,columna,token):
       self.listaTokens.append(Token(lexema,linea,columna,token))  
@@ -29,10 +30,19 @@ class AnalizadorLexico:
         self.estado = 1
         self.buffer += caracter
         self.columna += 1
+    elif caracter == '"':
+        self.estado = 2 
+        self.buffer += caracter
+        self.columna += 1   
     elif caracter == "<":
         self.estado = 3
         self.buffer += caracter 
-        self.columna += 1 
+        self.columna += 1
+    elif caracter.isdigit():
+        self.estado = 5
+        self.buffer += caracter
+        self.columna +=1   
+        self.contadorNumero += 1 
     elif caracter in ["\t"," "]: #Espacios en blanco y tabulaciones
         self.columna += 1
     elif caracter == '$':
@@ -125,6 +135,36 @@ class AnalizadorLexico:
             #self.estado = 0
             #self.i -= 1 
             
+  def s2(self,caracter):
+      if caracter.isalpha():
+          self.estado = 2
+          self.buffer += caracter
+          self.columna += 1     
+      elif caracter == " ":
+          self.estado = 2
+          self.buffer += caracter
+          self.columna += 1 
+      else:
+          self.estado = 21
+          self.buffer += caracter
+          self.columna += 1 
+    
+  def s21(self,caracter):
+      if caracter == '"':
+            self.estado = 21
+            self.buffer += caracter
+            self.columna += 1
+      elif caracter == " " or caracter == "$":
+            self.agregarToken(self.buffer,self.linea,self.columna,"equipo")
+            self.estado = 0
+            self.i -= 1 
+      else:
+            self.estado = 99
+            self.buffer += caracter 
+            self.columna += 1  
+        
+        
+            
   def s3(self,caracter):
       if caracter.isdigit() and self.contadorFecha <= 4:
           self.estado = 3
@@ -186,13 +226,35 @@ class AnalizadorLexico:
       elif caracter == " " or caracter == "$":
           self.agregarToken(self.buffer,self.linea,self.columna,"intervalo fecha")
           self.estado = 0
-          self.i -= 1 
+          self.i -= 1     
       else:
           self.estado = 99
           self.buffer += caracter 
           self.columna += 1  
-      
 
+  def s5(self,caracter):
+      #print(f"llegue a s5 {caracter} * {self.contadorNumero}")
+      if caracter.isdigit() and self.contadorNumero < 2:
+         self.estado = 5
+         self.buffer += caracter
+         self.columna += 1  
+         self.contadorNumero += 1
+      elif (self.contadorNumero == 2 and (caracter == " " or caracter == "$")):
+           self.agregarToken(self.buffer,self.linea,self.columna,"numero")
+           self.estado = 0
+           self.i -= 1
+           self.contadorNumero = 0
+      else:
+           if caracter == " " and self.contadorNumero == 1:
+                 self.agregarError(self.buffer,self.linea,self.columna)
+                 self.columna += 1
+                 self.estado = 0 
+                 self.i -= 1 
+           else:     
+                self.estado = 99
+                self.buffer += caracter 
+                self.columna += 1    
+      
   def analizar(self,cadena):
     cadena += '$'
     self.listaErrores = []
@@ -206,6 +268,8 @@ class AnalizadorLexico:
             self.s1(cadena[self.i])
         elif self.estado == 12:
             self.s12(cadena[self.i]) 
+        elif self.estado == 2:
+            self.s2(cadena[self.i])           
         elif self.estado == 3:
             self.s3(cadena[self.i])
         elif self.estado == 31:
@@ -214,6 +278,8 @@ class AnalizadorLexico:
             self.s32(cadena[self.i])
         elif self.estado == 33:
             self.s33(cadena[self.i])
+        elif self.estado == 5:
+            self.s5(cadena[self.i])
         elif self.estado == 99:
             self.E(cadena[self.i])          
         self.i += 1
