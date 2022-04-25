@@ -11,7 +11,7 @@ while True:
     listaTokens = lexico.listaTokens
     listaErrores = lexico.listaErrores
     
-    
+     
     print("LISTA TOKENS")
     lexico.imprimirTokens()
     print("LISTA ERRORES ")
