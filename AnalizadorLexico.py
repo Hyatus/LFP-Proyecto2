@@ -74,7 +74,7 @@ class AnalizadorLexico:
       self.buffer += caracter
       self.columna += 1
     elif self.buffer in self.PalabrasReservadas:
-         self.agregarToken(self.buffer,self.linea,self.columna,"palabra reservada {}".format(self.buffer))
+         self.agregarToken(self.buffer,self.linea,self.columna,"pr_{}".format(self.buffer))
          self.estado = 0
          self.i -= 1
     elif self.buffer in self.condiciones: 
@@ -102,23 +102,23 @@ class AnalizadorLexico:
       self.i -= 1
       
   def s4(self):
-      self.agregarToken(self.buffer,self.linea,self.columna,"menor que")
+      self.agregarToken(self.buffer,self.linea,self.columna,"menorQue")
       self.estado = 0
       self.i -= 1  
       
   def s5(self):
-      self.agregarToken(self.buffer,self.linea,self.columna,"mayor que")
+      self.agregarToken(self.buffer,self.linea,self.columna,"mayorQue")
       self.estado = 0
       self.i -= 1
 
   def s6(self,caracter):
       if caracter == "f":
         self.buffer += caracter   
-        self.agregarToken(self.buffer,self.linea,self.columna,"flag archivo")
+        self.agregarToken(self.buffer,self.linea,self.columna,"flagFile")
         self.estado = 0 
       elif caracter == "n":
         self.buffer += caracter   
-        self.agregarToken(self.buffer,self.linea,self.columna,"flag top")
+        self.agregarToken(self.buffer,self.linea,self.columna,"flagTop")
         self.estado = 0    
       elif caracter == "j":
         self.estado = 7
@@ -132,11 +132,11 @@ class AnalizadorLexico:
   def s7(self,caracter):
       if caracter == "i":
         self.buffer += caracter 
-        self.agregarToken(self.buffer,self.linea,self.columna,"flag a partir")
+        self.agregarToken(self.buffer,self.linea,self.columna,"flagApartir")
         self.estado = 0
       elif caracter == "f":
         self.buffer += caracter   
-        self.agregarToken(self.buffer,self.linea,self.columna,"flag hasta")
+        self.agregarToken(self.buffer,self.linea,self.columna,"flagHasta")
         self.estado = 0
       else:
         self.agregarError(caracter,self.linea,self.columna)
