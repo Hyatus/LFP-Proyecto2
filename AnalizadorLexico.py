@@ -6,7 +6,7 @@ class AnalizadorLexico:
   def __init__(self):
     self.listaTokens = []
     self.listaErrores = []
-    self.PalabrasReservadas = ["RESULTADO","VS","TEMPORADA","JORNADA","GOLES","TABLA","PARTIDOS","ADIOS"]
+    self.PalabrasReservadas = ["RESULTADO","VS","TEMPORADA","JORNADA","GOLES","TABLA","PARTIDOS","ADIOS","TOP"]
     self.condiciones = ["LOCAL","VISITANTE","TOTAL","SUPERIOR","INFERIOR"]
     self.linea = 1 
     self.columna = 0
@@ -78,7 +78,7 @@ class AnalizadorLexico:
          self.estado = 0
          self.i -= 1
     elif self.buffer in self.condiciones: 
-         self.agregarToken(self.buffer,self.linea,self.columna,"condicion".format(self.buffer))
+         self.agregarToken(self.buffer,self.linea,self.columna,"condicion{}".format(self.buffer))
          self.estado = 0
          self.i -= 1
     else: 

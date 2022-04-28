@@ -45,7 +45,15 @@ class AnalizadorSintactico:
         elif temporal.tipo == 'pr_JORNADA':
              self.JORNADA() 
         elif temporal.tipo == 'pr_GOLES':
-             self.GOLES()        
+             self.GOLES()  
+        elif temporal.tipo == 'pr_TABLA':
+             self.TABLA()
+        elif temporal.tipo == 'pr_PARTIDOS':
+             self.PARTIDOS()   
+        elif temporal.tipo == 'pr_TOP':
+             self.TOP()   
+        elif temporal.tipo == 'pr_ADIOS':
+             return     
         else:
             self.agregarError("pr_RESULTADO | pr_JORNADA | pr_GOLES | pr_TABLA | pr_PARTIDOS | pr_TOP | pr_ADIOS ",temporal.tipo)
             
@@ -351,18 +359,503 @@ class AnalizadorSintactico:
         token = self.sacarToken()
         if token.tipo == "pr_GOLES":
             token = self.sacarToken()
+            #### CONDICION 
+            if token is None: 
+                self.agregarError("condicionLOCAL | condicionVISITANTE | condicionTOTAL","EOF")
+            elif token.tipo == "condicionLOCAL" or token.tipo == "condicionVISITANTE" or token.tipo == "condicionTOTAL":
+                condicion = token.lexema
+                #print("->",condicion)
+                
+                ###### COMILLA #########
+                token = self.sacarToken()
+                if token is None:
+                    self.agregarError("comilla","EOF")
+                elif token.tipo == "comilla":
+                    equipo = self.armarCadena()
+    
+                    if equipo != "EOF":
+                       #print("Equipo->",equipo)
+                       ####### TEMPORADA ####### 
+                       token = self.sacarToken()
+                       if token is None:
+                           self.agregarError("pr_TEMPORADA","EOF")
+                       elif token.tipo == "pr_TEMPORADA":
+                           ###### MENOR QUE ########
+                           token = self.sacarToken()
+                           if token is None:
+                               self.agregarError("menorQue","EOF")
+                           elif token.tipo == "menorQue":
+                                ###### ENTERO #########
+                                token = self.sacarToken()
+                                if token is None:
+                                    self.agregarError("entero{4}","EOF")
+                                elif token.tipo == "entero" and len(token.lexema) == 4:
+                                    fecha += token.lexema
+                                    ##### GUION #####
+                                    token = self.sacarToken()
+                                    if token is None:
+                                       self.agregarError("guion","EOF")
+                                    elif token.tipo == "guion":
+                                        fecha += token.lexema
+                                        ###### ENTERO #########
+                                        token = self.sacarToken()
+                                        if token is None:
+                                            self.agregarError("entero{4}","EOF")
+                                        elif token.tipo == "entero" and len(token.lexema) == 4:
+                                            fecha += token.lexema
+                                            ##### MAYOR QUE ##### 
+                                            token = self.sacarToken()
+                                            if token is None:
+                                                self.agregarError("mayorQue","EOF")
+                                            elif token.tipo == "mayorQue":
+                                                ######## EOF #######
+                                                token = self.sacarToken()
+                                                if token is None:
+                                                    print("Condicion -> ",condicion)
+                                                    print("Equipo->",equipo)
+                                                    print("Fecha->",fecha)
+                                                else:
+                                                    self.agregarError("EOF",token.tipo)   
+                                                    
+                                            else:
+                                                self.agregarError("mayorQue",token.tipo)
+                                        
+                                        elif token.tipo == "entero":
+                                            self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                        else:
+                                            self.agregarError("entero{4}",token.tipo)
+                                            
+                                    else:
+                                        self.agregarError("guion",token.tipo)       
+                                    
+                                elif token.tipo == "entero":
+                                    self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                else:
+                                    self.agregarError("entero{4}",token.tipo)
+                                    
+                                    
+                                
+                           else:
+                               self.agregarError("menorQue",token.tipo)
+                           
+                       else:
+                           self.agregarError("pr_TEMPORADA",token.tipo)
+                    else:
+                        self.agregarError("comilla","EOF")
+                        
+                        
+                else:
+                
+                    self.agregarError("comilla",token.tipo)
+                
+                
+            else:
+                self.agregarError("condicionLOCAL | condicionVISITANTE | condicionTOTAL",token.tipo)
             
         else:
-            self.agregarError("pr_GOLES","EOF")    
-            
-            
+            self.agregarError("pr_GOLES","EOF") 
+    
+    def TABLA(self):
+        '''
+       Muestra la clasificación de La Liga (ordenamiento respecto a puntos), se especifica la temporada:
+
         
-        
-        
-        
+        TABLA	::=	 pr_tabla pr_temporada fecha 					
+	            |	 pr_tabla pr_temporada fecha  flagF identificador					
+				
+        '''
+        fecha = ""
+        nombreArchivo = ""
+        token = self.sacarToken()
+        if token.tipo == "pr_TABLA":
+            ########## TEMPORADA ###########
+            token = self.sacarToken()
+            if token is None:
+                self.agregarError("pr_TEMPORADA","EOF")
+            elif token.tipo == "pr_TEMPORADA":
+                ###### MENOR QUE ########
+                           token = self.sacarToken()
+                           if token is None:
+                               self.agregarError("menorQue","EOF")
+                           elif token.tipo == "menorQue":
+                                ###### ENTERO #########
+                                token = self.sacarToken()
+                                if token is None:
+                                    self.agregarError("entero{4}","EOF")
+                                elif token.tipo == "entero" and len(token.lexema) == 4:
+                                    fecha += token.lexema
+                                    ##### GUION #####
+                                    token = self.sacarToken()
+                                    if token is None:
+                                       self.agregarError("guion","EOF")
+                                    elif token.tipo == "guion":
+                                        fecha += token.lexema
+                                        ###### ENTERO #########
+                                        token = self.sacarToken()
+                                        if token is None:
+                                            self.agregarError("entero{4}","EOF")
+                                        elif token.tipo == "entero" and len(token.lexema) == 4:
+                                            fecha += token.lexema
+                                            ##### MAYOR QUE ##### 
+                                            token = self.sacarToken()
+                                            if token is None:
+                                                self.agregarError("mayorQue","EOF")
+                                            elif token.tipo == "mayorQue":
+                                                ######## EOF | ARCHIVO #######
+                                                token = self.sacarToken()
+                                                if token is None:
+                                                    print("Fecha->",fecha)
+                                                elif token.tipo == "flagFile":
+                                                        ##### IDENTIFICADOR ######
+                                                        token = self.sacarToken()
+                                                        if token is None:
+                                                            self.agregarError("identificador","EOF")
+                                                        elif token.tipo == "identificador":
+                                                            nombreArchivo = token.lexema
+                                                            ######## EOF #######
+                                                            token = self.sacarToken()
+                                                            if token is None:
+                                                                print("Fecha->",fecha)
+                                                                print("Nombre Archivo->",nombreArchivo)
+                                                            else:
+                                                                self.agregarError("EOF",token.tipo)
+                                                        else:
+                                                            self.agregarError("identificador",token.tipo)
+                                                        
+                                                else:
+                                                    self.agregarError("flagFile",token.tipo)    
+                                                    
+                                            else:
+                                                self.agregarError("mayorQue",token.tipo)
+                                        
+                                        elif token.tipo == "entero":
+                                            self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                        else:
+                                            self.agregarError("entero{4}",token.tipo)
+                                            
+                                    else:
+                                        self.agregarError("guion",token.tipo)       
+                                    
+                                elif token.tipo == "entero":
+                                    self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                else:
+                                    self.agregarError("entero{4}",token.tipo)      
+                                
+                           else:
+                               self.agregarError("menorQue",token.tipo)
+                           
                 
-        
+            else:
+                self.agregarError("pr_TEMPORADA",token.tipo)
+        else:
+            self.agregarError("pr_TABLA","EOF")
             
+    def PARTIDOS(self):
+        '''
+        PARTIDOS	::=	pr_partidos equipo pr_temporada fecha flagF identificador	 																	
+	                |	pr_partidos equipo pr_temporada fecha flagF identificador flagApartir numero flagHasta entero{2}									
+        '''
+        equipo = None
+        fecha = ""
+        nombreArchivo = None
+        aPartir = 0
+        hasta = 0
+        
+        token = self.sacarToken()
+        if token.tipo == "pr_PARTIDOS":
+            token = self.sacarToken()
+            ####### COMILLA ########
+            if token is None:
+                self.agregarError("comilla","EOF")
+            elif token.tipo == "comilla":
+                equipo = self.armarCadena()
+                
+                if equipo != "EOF":
+                    print("Equipo->",equipo)
+                    ######## TEMPORADA #########
+                    token = self.sacarToken()
+                    if token is None:
+                        self.agregarError("pr_TEMPORADA","EOF")
+                    elif token.tipo == "pr_TEMPORADA":
+                        ###### MENOR QUE ########
+                           token = self.sacarToken()
+                           if token is None:
+                               self.agregarError("menorQue","EOF")
+                           elif token.tipo == "menorQue":
+                                ###### ENTERO #########
+                                token = self.sacarToken()
+                                if token is None:
+                                    self.agregarError("entero{4}","EOF")
+                                elif token.tipo == "entero" and len(token.lexema) == 4:
+                                    fecha += token.lexema
+                                    ##### GUION #####
+                                    token = self.sacarToken()
+                                    if token is None:
+                                       self.agregarError("guion","EOF")
+                                    elif token.tipo == "guion":
+                                        fecha += token.lexema
+                                        ###### ENTERO #########
+                                        token = self.sacarToken()
+                                        if token is None:
+                                            self.agregarError("entero{4}","EOF")
+                                        elif token.tipo == "entero" and len(token.lexema) == 4:
+                                            fecha += token.lexema
+                                            ##### MAYOR QUE ##### 
+                                            token = self.sacarToken()
+                                            if token is None:
+                                                self.agregarError("mayorQue","EOF")
+                                            elif token.tipo == "mayorQue":
+                                               ######## EOF | ARCHIVO #######
+                                                token = self.sacarToken()
+                                                if token is None:
+                                                    print("Equipo->",equipo)
+                                                    print("Fecha->",fecha)
+                                            
+                                                elif token.tipo == "flagFile":
+                                                        ##### IDENTIFICADOR ######
+                                                        token = self.sacarToken()
+                                                        if token is None:
+                                                            self.agregarError("identificador","EOF")
+                                                        elif token.tipo == "identificador":
+                                                            nombreArchivo = token.lexema
+                                                            ######## EOF #######
+                                                            token = self.sacarToken()
+                                                            if token is None:
+                                                                print("Equipo->",equipo)
+                                                                print("Fecha->",fecha)
+                                                                print("Nombre Archivo->",nombreArchivo)
+                                                                ######### FLAG A PARTIR ########
+                                                            elif token.tipo == "flagApartir":
+            
+                                                                    ######## ENTERO ######### 
+                                                                    token = self.sacarToken()
+                                                                    if token is None:
+                                                                        self.agregar("entero","EOF")
+                                                                    elif token.tipo == "entero" and len(token.lexema) == 2:
+                                                                        aPartir = token.lexema 
+                                                                        
+                                                                        ######### FLAG HASTA ########
+                                                                        token = self.sacarToken()
+                                                                        if token is None:
+                                                                            self.agregarError("flagHasta","EOF")
+                                                                        elif token.tipo == "flagHasta":
+                                                                    
+                                                                            ######## ENTERO ######### 
+                                                                            token = self.sacarToken()
+                                                                            if token is None:
+                                                                                self.agregar("entero","EOF")
+                                                                            elif token.tipo == "entero" and len(token.lexema) == 2:
+                                                                                hasta = token.lexema 
+                                                                                ####### EOF #########
+                                                                                token = self.sacarToken()
+                                                                                if token is None:
+                                                                                    print("Equipo->",equipo)
+                                                                                    print("Fecha->",fecha)
+                                                                                    print("A partir->",aPartir)
+                                                                                    print("Hasta->",hasta)
+                                                                                else:
+                                                                                    self.agregarError("EOF",token.tipo)    
+                                                                                
+                                                                        
+                                                                            elif token.tipo == "entero":
+                                                                                self.agregarError("entero{2}",f"entero[{len(token.lexema)}]")
+                                                                            else:
+                                                                                self.agregarError("entero{2}",token.tipo)
+                                                                        
+        
+                                                                        else:
+                                                                            self.agregarError("flagHasta",token.tipo)
+                                                                        
+                                                                    elif token.tipo == "entero":
+                                                                        self.agregarError("entero{2}",f"entero[{len(token.lexema)}]")
+                                                                    else:
+                                                                        self.agregarError("entero{2}",token.tipo)
+                                                                        
+        
+                                                            else:
+                                                                self.agregarError("flagApartir",token.tipo)
+                                                                
+                                                                
+                                                                
+                                                        else:
+                                                            self.agregarError("identificador",token.tipo)
+                                                        
+                                                else:
+                                                    self.agregarError("flagFile",token.tipo)    
+                                                  
+                                                    
+                                            else:
+                                                self.agregarError("mayorQue",token.tipo)
+                                        
+                                        elif token.tipo == "entero":
+                                            self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                        else:
+                                            self.agregarError("entero{4}",token.tipo)
+                                            
+                                    else:
+                                        self.agregarError("guion",token.tipo)       
+                                    
+                                elif token.tipo == "entero":
+                                    self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                else:
+                                    self.agregarError("entero{4}",token.tipo)
+                                    
+                                    
+                                
+                           else:
+                               self.agregarError("menorQue",token.tipo)
+                           
+                    else:
+                        self.agregarError("pr_TEMPORADA",token.tipo)    
+                else:
+                    self.agregarError("comilla","EOF")    
+            
+        else:
+            self.agregarError("pr_PARTIDOS","EOF")
+
+    def TOP(self):
+        '''
+         Muestra el top (superior o inferior) de los equipos clasificados
+            según los puntos conseguidos.
+        
+        Producción
+                TOP	::=	pr_top con_superior pr_temporada fecha flagTop entero{2} 					
+	                |	pr_top con_inferior pr_temporada fecha  flagTop entero{2}					
+	                |	pr_top con_superior pr_temporada fecha 					
+	                |	pr_top con_inferior pr_temporada fecha					
+
+        '''
+        token = self.sacarToken()
+        condicion = None
+        fecha = ""
+        numero = 0
+        
+        if token.tipo == "pr_TOP":
+            token = self.sacarToken()
+            ######## CONDICION ##############
+            
+            if token is None:
+                self.agregarError("condicionSUPERIOR | condicionINFERIOR","EOF")
+            elif token.tipo == "condicionSUPERIOR" or token.tipo == "condicionINFERIOR":
+                 condicion = token.lexema
+                 ##### TEMPORADA ########
+                 token = self.sacarToken()
+                 if token is None:
+                     self.agregarError("pr_TEMPORADA","EOF")
+                 elif token.tipo == "pr_TEMPORADA":
+                     ####### MENOR QUE ##########
+                    token = self.sacarToken()
+                    if token is None:
+                        self.agregarError("menorQue","EOF")
+                        return
+                    elif token.tipo == "menorQue":
+                        
+                        ######## ENTERO ########
+                        token = self.sacarToken()
+                        if token is None:
+                            self.agregarError("entero{4}","EOF")
+                            return
+                        elif token.tipo == "entero" and len(token.lexema) == 4:
+                            fecha += token.lexema 
+                            ###### GUION ######
+                            token = self.sacarToken()
+                            if token is None:
+                                self.agregarError("guion","EOF")
+                                return
+                            elif token.tipo == "guion":
+                                fecha += token.lexema
+                                ######## ENTERO ########
+                                token = self.sacarToken()
+                                if token is None:
+                                    self.agregarError("entero{4}","EOF")
+                                    return
+                                elif token.tipo == "entero" and len(token.lexema) == 4:
+                                    fecha += token.lexema
+                                    ###### MAYOR QUE ########
+                                    token = self.sacarToken()
+                                    if token is None:
+                                        self.agregarError("mayorQue","EOF")
+                                        return
+                                    elif token.tipo == "mayorQue":
+                                        
+                                        ######## EOF | FLAG ARCHIVO ###### 
+                                        token = self.sacarToken()
+                                        if token is None:
+                                            
+                                            print(f"Fecha {fecha}")
+                                        elif token.tipo == "flagTop":
+                                            
+                                            ######### ENTERO ########
+                                            token = self.sacarToken()
+                                            if token is None:
+                                                self.agregarError("entero{2}","EOF")
+                                                return
+                                            elif token.tipo == "entero" and len(token.lexema) == 2:
+                                                numero = token.lexema
+                                                ######### EOF ########
+                                                token = self.sacarToken()
+                                                if token is None:
+                                                    print(f"Numero: {numero}")
+                                                    print(f"Fecha {fecha}")
+                                                
+                                                else:
+                                                    self.agregarError("EOF",token.tipo)
+                                                    return 
+                                                    
+                                                
+                                            elif token.tipo == "entero":
+                                                self.agregarError("entero{2}",f"entero[{len(token.lexema)}]")
+                                                return 
+                                            else:
+                                                self.agregarError("entero{2}",token.tipo)
+                                                return
+                                            
+                                            
+                                            
+                                            
+                                        else:
+                                            self.agregarError("flagTop",token.tipo)
+                                            return 
+                                            
+                                                
+                                            
+                                    else:
+                                        self.agregarError("mayorQue",token.tipo)
+                                        return 
+                                        
+                                elif token.tipo == "entero":
+                                    self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                                    return
+                                else:
+                                    self.agregarError("entero",token.tipo)
+                                    return    
+                                    
+                                
+                            
+                            else:
+                                self.agregarError("guion",token.tipo)
+                                return
+                            
+                        elif token.tipo == "entero":
+                            self.agregarError("entero{4}",f"entero[{len(token.lexema)}]")
+                            return
+                        else:
+                            self.agregarError("entero",token.tipo)
+                            return
+                        
+                        
+                    else:
+                        self.agregarError("menorQue",token.tipo)
+                        return
+                     
+                 else:
+                     self.agregarError("pr_TEMPORADA",token.tipo)    
+            else:
+                self.agregarError("condicionSUPERIOR | condicionINFERIOR","EOF")   
+            
+        else:
+            self.agregarError("pr_TOP","EOF")    
+                  
     def armarCadena(self):
         #print("Empieza a armar cadena")
         token = self.sacarToken()
