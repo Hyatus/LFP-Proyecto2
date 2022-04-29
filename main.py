@@ -1,6 +1,11 @@
 from AnalizadorLexico import *
 from AnalizadorSintactico import *
 
+
+
+
+
+
 while True:
     lexico = AnalizadorLexico()
     
@@ -11,7 +16,6 @@ while True:
     listaTokens = lexico.listaTokens
     listaErrores = lexico.listaErrores
     
-     
     print("LISTA TOKENS")
     lexico.imprimirTokens()
     print("LISTA ERRORES ")
